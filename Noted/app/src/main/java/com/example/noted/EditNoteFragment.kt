@@ -1,32 +1,20 @@
 package com.example.noted
 
+import android.app.DatePickerDialog
+import android.icu.util.Calendar
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [EditListFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
-class EditListFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+class EditNoteFragment : Fragment() {
+    var setDate:TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
     }
 
     override fun onCreateView(
@@ -34,26 +22,60 @@ class EditListFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_edit_note, container, false)
+        val view = inflater.inflate(R.layout.fragment_edit_note, container, false)
+        val calendar:Calendar = Calendar.getInstance()
+        setDate = view.findViewById(R.id.datePicker)
+
+        val datePicker = DatePickerDialog.OnDateSetListener { v, year, month, dayOfMonth ->
+            calendar.set(Calendar.YEAR, year)
+            calendar.set(Calendar.MONTH, month)
+            calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+            setLabel(calendar)
+        }
+
+        setDate?.setOnClickListener {
+            Log.d("here","hello")
+            DatePickerDialog(view.context, datePicker, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
+        }
+
+        return view
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment EditListFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            EditListFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
-            }
+    private fun setLabel(calendar: Calendar) {
+        var format:String = ""
+        val month = setMonth(calendar.get(Calendar.MONTH))
+        val day = setDay(calendar.get(Calendar.DAY_OF_MONTH))
+        format = month + " " + day + " " + calendar.get(Calendar.YEAR)
+        setDate?.setText(format)
+    }
+
+    private fun setDay(day:Int) : String {
+        var daytext:String = ""
+        when(day % 10) {
+            1 -> daytext = "" + day + "st"
+            2 -> daytext = "" + day + "nd"
+            3 -> daytext = "" + day + "rd"
+            else -> daytext = "" + day + "th"
+        }
+        return daytext
+    }
+
+    private fun setMonth(month: Int) : String {
+        var monthText:String = ""
+        when(month) {
+            0 -> monthText = "January"
+            1 -> monthText = "February"
+            2 -> monthText = "March"
+            3 -> monthText = "April"
+            4 -> monthText = "May"
+            5 -> monthText = "June"
+            6 -> monthText = "July"
+            7 -> monthText = "August"
+            8 -> monthText = "September"
+            9 -> monthText = "October"
+            10 -> monthText = "November"
+            11 -> monthText = "December"
+        }
+        return monthText
     }
 }
