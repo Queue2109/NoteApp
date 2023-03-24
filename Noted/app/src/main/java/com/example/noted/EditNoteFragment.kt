@@ -13,8 +13,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.view.children
-import androidx.core.view.isNotEmpty
+import java.util.ArrayList
 import androidx.fragment.app.Fragment
 
 
@@ -22,11 +21,7 @@ class EditNoteFragment : Fragment() {
     var setDate:TextView? = null
     private var linearLayout:LinearLayout? = null
 
-    private var arrayOfActions: ArrayList<ActionClass>? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
+    private var arrayOfActions: ArrayList<ActionClass> = ArrayList()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -38,39 +33,44 @@ class EditNoteFragment : Fragment() {
 
         setDate(view)
         addActions(view)
-        setChildClickListeners()
 
         // when the user clicks on save button, we pass all the arguments via sharedPreferences as one object - NotedDataClass
         val saveButton: Button = view.findViewById(R.id.saveNote)
         val sharedPref = view.context.getSharedPreferences("notes", Context.MODE_PRIVATE)
         var editor = sharedPref.edit()
-        //title, date and ActionClass arraylist
-        var note:NotedDataClass? = null
 
         saveButton.setOnClickListener{
-            val arrayOfActions:ArrayList<ActionClass> = getActions()
+
+            // build an arraylist with actions
+            addActionsToArrayList()
+
+            // get title
+            val title:String = view.findViewById<EditText>(R.id.newTitle).text.toString()
+
+            // get date
+            val date = view.findViewById<TextView>(R.id.datePicker).text.toString()
+
+
+            //title, date and arraylist of actions
+            val note = NotedDataClass(title, date, arrayOfActions)
+            editor.putString(date, note.toString())
+            editor.apply()
+
+            // change fragment
+            activity?.supportFragmentManager?.beginTransaction()?.replace(R.id.main_activity, NotesListFragment())?.addToBackStack(null)?.commit()
+
+
         }
         return view
     }
 
-    private fun getActions(): ArrayList<ActionClass> {
-        val action:ActionClass = ActionClass(true, "")
-        val list:ArrayList<ActionClass>? = null
-        return list!!
-    }
-
-    fun setChildClickListeners() {
+    private fun addActionsToArrayList() {
         for (i in 0 until linearLayout!!.childCount) {
-            val childView = linearLayout!!.getChildAt(i) as EditText
-            childView.setOnLongClickListener{
-                linearLayout?.removeView(childView)
-                true
-            }
-            Log.d("EditNoteFragment", "OnLongClickListener registered for child view at index $i")
+            val editText  = linearLayout?.getChildAt(i) as EditText
+            val actionClass = ActionClass(false, editText.text.toString())
+            arrayOfActions.add(actionClass)
         }
     }
-
-
 
 
     private fun addActions(view: View) {
@@ -78,7 +78,6 @@ class EditNoteFragment : Fragment() {
         addActionView.setOnClickListener {
             linearLayout?.addView(addEditText())
         }
-        setChildClickListeners()
     }
 
     private fun addEditText() : EditText {
@@ -88,15 +87,16 @@ class EditNoteFragment : Fragment() {
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
         editText.hint = "Change this"
-        editText.setOnLongClickListener{
 
-            TODO("add a popup to confirm deleting an item")
+        // set click listener to delete an action
+        editText.setOnLongClickListener{
             linearLayout?.removeView(editText)
             true
         }
         return editText
     }
 
+    // set date as content on textView
     private fun setDate(view: View) {
 
         setDate = view.findViewById(R.id.datePicker)
@@ -124,11 +124,11 @@ class EditNoteFragment : Fragment() {
 
     // add two letters after number
     private fun setDay(day:Int) : String {
-        var daytext:String = ""
+        var daytext: String
         when(day % 10) {
-            1 -> daytext = "" + day + "st"
-            2 -> daytext = "" + day + "nd"
-            3 -> daytext = "" + day + "rd"
+            1 -> if(day % 100 == 11) daytext = "" + day + "th" else daytext = "" + day + "st"
+            2 -> if(day % 100 == 12) daytext = "" + day + "th" else daytext = "" + day + "nd"
+            3 -> if(day % 100 == 13) daytext = "" + day + "th" else daytext = "" + day + "rd"
             else -> daytext = "" + day + "th"
         }
         return daytext
