@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
     private fun changeFragment(fragment: Fragment) {
         val fragmentManager:FragmentManager = supportFragmentManager
         val fragmentTransaction:FragmentTransaction = fragmentManager.beginTransaction()
-        fragmentTransaction.replace(R.id.main_activity, EditNoteFragment())
+        fragmentTransaction.replace(R.id.main_activity, fragment)
         fragmentTransaction.commit()
     }
 }
