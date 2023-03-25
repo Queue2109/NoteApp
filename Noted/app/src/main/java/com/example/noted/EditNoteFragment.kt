@@ -9,19 +9,17 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
-import java.util.ArrayList
+import android.widget.*
 import androidx.fragment.app.Fragment
+import com.google.gson.Gson
 
 
 class EditNoteFragment : Fragment() {
     var setDate:TextView? = null
     private var linearLayout:LinearLayout? = null
-
     private var arrayOfActions: ArrayList<ActionClass> = ArrayList()
+    private var titleField:EditText? = null
+    private var dateField:TextView? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -30,7 +28,16 @@ class EditNoteFragment : Fragment() {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_edit_note, container, false)
         linearLayout  = view.findViewById(R.id.linearLayout)
+        titleField = view.findViewById(R.id.newTitle)
+        dateField = view.findViewById(R.id.datePicker)
 
+        Log.d("bundle", savedInstanceState.toString())
+
+        val bundle: Bundle? = arguments
+        if(bundle != null) {
+            setData(bundle)
+            Log.d("bundle", bundle.toString())
+        }
         setDate(view)
         addActions(view)
 
@@ -45,23 +52,53 @@ class EditNoteFragment : Fragment() {
             addActionsToArrayList()
 
             // get title
-            val title:String = view.findViewById<EditText>(R.id.newTitle).text.toString()
+            val titleText = titleField?.text.toString()
 
             // get date
-            val date = view.findViewById<TextView>(R.id.datePicker).text.toString()
-
+            val dateText = dateField?.text.toString()
+            if(titleText.isEmpty() || dateText.isEmpty()) {
+                Toast.makeText(context, "Please make an effort to insert at least the title and date.", Toast.LENGTH_LONG).show()
+                return@setOnClickListener
+            }
 
             //title, date and arraylist of actions
-            val note = NotedDataClass(title, date, arrayOfActions)
-            editor.putString(date, note.toString())
+            val note = NotedDataClass(titleText, dateText, arrayOfActions)
+            val json = Gson().toJson(note)
+
+            editor.putString(dateText, json)
             editor.apply()
 
             // change fragment
-            activity?.supportFragmentManager?.beginTransaction()?.replace(R.id.main_activity, NotesListFragment())?.addToBackStack(null)?.commit()
-
-
+            activity?.supportFragmentManager?.beginTransaction()?.replace(R.id.main_activity, NotesListFragment())?.commit()
         }
         return view
+    }
+
+    private fun setData(data: Bundle) {
+        if(data != null) {
+            val title: String? = data.getString("title")
+            val date: String? = data.getString("date")
+            titleField?.setText(title)
+            dateField?.text = date
+            val actionsString = data.getParcelableArrayList<ActionClass>("actions")
+            if(actionsString != null) {
+                for (action in actionsString) {
+                    var editText = EditText(context)
+                    editText.layoutParams = LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
+                    editText.setText(action.description)
+
+                    // set click listener to delete an action
+                    editText.setOnLongClickListener{
+                        linearLayout?.removeView(editText)
+                        true
+                    }
+                    linearLayout?.addView(editText)
+                }
+            }
+        }
     }
 
     private fun addActionsToArrayList() {
@@ -86,6 +123,7 @@ class EditNoteFragment : Fragment() {
             ViewGroup.LayoutParams.MATCH_PARENT,
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
+
         editText.hint = "Change this"
 
         // set click listener to delete an action
