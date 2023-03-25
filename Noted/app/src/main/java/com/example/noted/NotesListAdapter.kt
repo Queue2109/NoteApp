@@ -44,7 +44,7 @@ class NotesListAdapter(context: Context): RecyclerView.Adapter<NotesListAdapter.
                 bundle.putString("date", itemDate?.text.toString())
                 val actions = returnNotedDataObject(itemDate?.text.toString())?.actions
                 bundle.putParcelableArrayList("actions", actions)
-                val fragment = EditNoteFragment()
+                val fragment = TodayFragment()
                 fragment.arguments = bundle
                 val activity = itemView.context as AppCompatActivity
                 activity.supportFragmentManager.beginTransaction().replace(R.id.main_activity, fragment).addToBackStack(null).commit()
