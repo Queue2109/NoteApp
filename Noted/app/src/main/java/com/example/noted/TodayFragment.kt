@@ -1,24 +1,23 @@
 package com.example.noted
 
+import NotedDataClass
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Bundle
-import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
-import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
-import org.w3c.dom.Text
+import androidx.fragment.app.Fragment
+import com.google.gson.Gson
 
 class TodayFragment : Fragment() {
 
+    private var sharedPref: SharedPreferences? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
+    private var keys:List<String>? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -26,31 +25,39 @@ class TodayFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_today, container, false)
-        val bundle: Bundle? = arguments
-        if(bundle != null) {
-            setData(bundle, view)
+
+        sharedPref = view.context.getSharedPreferences("notes", Context.MODE_PRIVATE)
+        keys = sharedPref?.all?.keys?.toList()
+        if(getDate() != null) {
+            setData(getDate()!!, view)
         }
+
         return view
     }
 
-    private fun setData(data: Bundle, view:View) {
-        if(data != null) {
-            val title: String? = data.getString("title")
-            val date: String? = data.getString("date")
-            val titleField = view.findViewById<TextView>(R.id.todaysTitle)
-            val dateField = view.findViewById<TextView>(R.id.todaysDate)
-            val linearLayout = view.findViewById<LinearLayout>(R.id.linearLayout)
-            titleField?.setText(title)
-            dateField?.text = date
-            val actionsString = data.getParcelableArrayList<ActionClass>("actions")
-            if(actionsString != null) {
-                for (action in actionsString) {
-                    val checkbox = CheckBox(context)
-                    checkbox.text = action.description
-                    checkbox.isChecked = action.checked
-                    linearLayout?.addView(checkbox)
-                }
-            }
+    private fun setData(data: NotedDataClass, view:View) {
+        val title: String = data.title
+        val date: String = data.date
+        val titleField = view.findViewById<TextView>(R.id.todaysTitle)
+        val dateField = view.findViewById<TextView>(R.id.todaysDate)
+        val linearLayout = view.findViewById<LinearLayout>(R.id.linearLayout)
+        titleField?.text = title
+        dateField?.text = date
+        val actions = data.actions
+        for (action in actions) {
+            val checkbox = CheckBox(context)
+            checkbox.text = action.description
+            linearLayout?.addView(checkbox)
         }
     }
+
+    private fun getDate():NotedDataClass? {
+        val key = getTodaysDate()
+        val json = sharedPref?.getString(key, null)
+        if(json != null) {
+            val gson = Gson()
+            return gson.fromJson(json, NotedDataClass::class.java)
+        }
+        return null
+      }
 }

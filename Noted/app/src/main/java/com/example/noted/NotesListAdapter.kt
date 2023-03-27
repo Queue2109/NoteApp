@@ -1,20 +1,16 @@
 package com.example.noted
 
-import NotedDataClass
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import android.provider.ContactsContract.CommonDataKinds.Note
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 
 
 class NotesListAdapter(context: Context): RecyclerView.Adapter<NotesListAdapter.CardViewHolder?>() {
@@ -24,10 +20,6 @@ class NotesListAdapter(context: Context): RecyclerView.Adapter<NotesListAdapter.
     // get keys from sharedPreferences
     private var keys:List<String>? = sharedPreferences?.all?.keys?.toList()
 
-    private var titleText:String? = null
-    private var dateText:String? = null
-
-    var bundle = Bundle()
 
     inner class CardViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
@@ -40,20 +32,22 @@ class NotesListAdapter(context: Context): RecyclerView.Adapter<NotesListAdapter.
             // on item click, go to EditNoteFragment but with data already applied
             itemView.setOnClickListener {
                 // create bundle
+                val intent = Intent(itemView.context, NewNoteActivity::class.java)
+                val bundle = Bundle()
                 bundle.putString("title", itemTitle?.text.toString())
                 bundle.putString("date", itemDate?.text.toString())
                 val actions = returnNotedDataObject(itemDate?.text.toString())?.actions
                 bundle.putParcelableArrayList("actions", actions)
-                val fragment = TodayFragment()
-                fragment.arguments = bundle
-                val activity = itemView.context as AppCompatActivity
-                activity.supportFragmentManager.beginTransaction().replace(R.id.main_activity, fragment).addToBackStack(null).commit()
+
+                intent.putExtras(bundle)
+                itemView.context.startActivity(intent)
+                //val activity = itemView.context as AppCompatActivity
+                //activity.supportFragmentManager.beginTransaction().replace(R.id.fragment_edit_note, fragment).addToBackStack(null).commit()
             }
         }
     }
 
-
-    private fun returnNotedDataObject(key: String): NotedDataClass? {
+    fun returnNotedDataObject(key: String): NotedDataClass? {
         val json = sharedPreferences?.getString(key, null)
         val gson = Gson()
         return gson.fromJson(json, NotedDataClass::class.java)
@@ -61,11 +55,9 @@ class NotesListAdapter(context: Context): RecyclerView.Adapter<NotesListAdapter.
 
     override fun onBindViewHolder(holder: CardViewHolder, position: Int) {
         val notedDataObject = returnNotedDataObject(keys!![position])
-        Log.d("notedData", notedDataObject.toString())
 
-        holder.itemTitle?.setText(notedDataObject?.title)
-        holder.itemDate?.setText(notedDataObject?.date)
-        Log.d("itemDate", holder.itemDate?.text.toString())
+        holder.itemTitle?.text = notedDataObject?.title
+        holder.itemDate?.text = notedDataObject?.date
 
     }
     override fun onCreateViewHolder(viewGroup: ViewGroup, i: Int): CardViewHolder {

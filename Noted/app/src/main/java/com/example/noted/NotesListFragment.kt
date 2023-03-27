@@ -1,5 +1,6 @@
 package com.example.noted
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -38,7 +39,8 @@ class NotesListFragment : Fragment() {
         // implement fab button click listener and go to EditNoteFragment
         val fabButton = view.findViewById<FloatingActionButton>(R.id.fabButton)
         fabButton.setOnClickListener{
-            activity?.supportFragmentManager?.beginTransaction()?.replace(R.id.main_activity, EditNoteFragment())?.addToBackStack(null)?.commit()
+            val intent = Intent(context, NewNoteActivity::class.java)
+            startActivity(intent)
         }
 
         return view
